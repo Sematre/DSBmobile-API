@@ -20,7 +20,7 @@ import de.sematre.api.dsbmobile.TimeTable;
 ##### Code:
 
 Note:
-Der try-catch Block ist hier nur Optimal!
+Der try-catch Block ist hier nur optional!
 
 ```java
 try {
@@ -52,7 +52,7 @@ import de.sematre.api.dsbmobile.News;
 ##### Code:
 
 Note:
-Der try-catch Block ist auch hier nur Optimal!
+Der try-catch Block ist auch hier nur optional!
 
 ```java
 try {
