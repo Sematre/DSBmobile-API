@@ -1,5 +1,6 @@
 package de.sematre.dsbmobile;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
@@ -24,8 +25,9 @@ public class DSBMobile implements Serializable, Cloneable {
 
 	public DSBMobile(String username, String password) {
 		String json = getStringFromURL(URL_PREFIX + "/authid/" + username + "/" + password);
-		JsonArray jArray = gson.fromJson(("[" + json + "]"), JsonArray.class);
+		if (json == null) throw new IllegalArgumentException("Username or password is incorrect!");
 
+		JsonArray jArray = gson.fromJson(("[" + json + "]"), JsonArray.class);
 		String key = jArray.get(0).getAsString();
 		if (key.equals("00000000-0000-0000-0000-000000000000")) throw new IllegalArgumentException("Username or password is incorrect!");
 		this.key = key;
@@ -73,6 +75,8 @@ public class DSBMobile implements Serializable, Cloneable {
 
 			scanner.close();
 			return text;
+		} catch (FileNotFoundException e) {
+			return null;
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "";
