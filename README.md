@@ -13,8 +13,8 @@ Eine Java API für DSBmobile.
 ### Stundenpläne auslesen
 ##### Imports:
 ```java
-import de.sematre.api.dsbmobile.DSBMobile;
-import de.sematre.api.dsbmobile.TimeTable;
+import de.sematre.dsbmobile.DSBMobile;
+import de.sematre.dsbmobile.TimeTable;
 ```
 
 ##### Code:
@@ -45,8 +45,8 @@ try {
 ### News auslesen
 ##### Imports:
 ```java
-import de.sematre.api.dsbmobile.DSBMobile;
-import de.sematre.api.dsbmobile.News;
+import de.sematre.dsbmobile.DSBMobile;
+import de.sematre.dsbmobile.News;
 ```
 
 ##### Code:

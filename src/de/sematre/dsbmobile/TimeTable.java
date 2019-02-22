@@ -1,8 +1,8 @@
-package de.sematre.api.dsbmobile;
+package de.sematre.dsbmobile;
 
 import java.io.Serializable;
 
-public class TimeTable implements Serializable {
+public class TimeTable implements Serializable, Cloneable {
 
 	private static final long serialVersionUID = 553852884423090700L;
 	private Boolean isHtml = false;
@@ -60,18 +60,6 @@ public class TimeTable implements Serializable {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((date == null) ? 0 : date.hashCode());
-		result = prime * result + ((groupName == null) ? 0 : groupName.hashCode());
-		result = prime * result + ((isHtml == null) ? 0 : isHtml.hashCode());
-		result = prime * result + ((title == null) ? 0 : title.hashCode());
-		result = prime * result + ((url == null) ? 0 : url.hashCode());
-		return result;
-	}
-
-	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (obj == null) return false;
@@ -97,6 +85,6 @@ public class TimeTable implements Serializable {
 
 	@Override
 	public String toString() {
-		return "{isHtml=" + isHtml + ", date=" + date + ", groupName=" + groupName + ", title=" + title + ", url=" + url + "}";
+		return "{\"isHtml\":\"" + isHtml + "\", \"date\":\"" + date + "\", \"groupName\":\"" + groupName + "\", \"title\":\"" + title + "\", \"url\":\"" + url + "\"}";
 	}
 }
