@@ -1,27 +1,15 @@
 # DSBmobile-API
-Version: 1.0
-Eine Java API für DSBmobile.
+[![Release Version][release-image]][release-url]
+[![Build Status][travis-image]][travis-url]
+[![License][license-image]][license-url]
+> Unofficial DSBmobile API for Java.
 
-## Wird benötigt
 
-### Google-Gson
+A simple Java library for DSBmobile.
 
-##### [https://github.com/google/gson](https://github.com/google/gson)
+## Code example
 
-## Benutzung
-
-### Stundenpläne auslesen
-##### Imports:
-```java
-import de.sematre.dsbmobile.DSBMobile;
-import de.sematre.dsbmobile.TimeTable;
-```
-
-##### Code:
-
-Note:
-Der try-catch Block ist hier nur optional!
-
+### TimeTable
 ```java
 try {
 	DSBMobile dsbMobile = new DSBMobile("username", "password");
@@ -38,22 +26,12 @@ try {
 
 	}
 } catch (IllegalArgumentException e) {
-	// Benutzername oder Passwort falsch!
+	// Wrong username or password!
 }
 ```
+Note: The try-catch block is not necessary.
 
-### News auslesen
-##### Imports:
-```java
-import de.sematre.dsbmobile.DSBMobile;
-import de.sematre.dsbmobile.News;
-```
-
-##### Code:
-
-Note:
-Der try-catch Block ist auch hier nur optional!
-
+### News
 ```java
 try {
 	DSBMobile dsbMobile = new DSBMobile("username", "password");
@@ -61,15 +39,40 @@ try {
 	ArrayList<News> newsList = dsbMobile.getNews();
 	for (News news : newsList) {
 
+		String id = news.getId();
 		String headLine = news.getHeadLine();
 		String date = news.getDate();
-		String id = news.getId();
 		String imageUrl = news.getImageUrl();
 		String shortMessage = news.getShortMessage();
 		String wholeMessage = news.getWholeMessage();
 
 	}
 } catch (IllegalArgumentException e) {
-	// Benutzername oder Passwort falsch!
+	// Wrong username or password!
 }
 ```
+Note: The try-catch block is not necessary.
+
+## Release History
+* 1.1
+    * Code cleanup
+	* Readme update
+* 1.0
+    * Initial version
+
+## Dependencies
+- [Google Gson](https://github.com/google/gson) ([Apache 2 license](https://github.com/google/gson/blob/master/LICENSE)).
+
+## Info
+© Sematre 2018
+
+Distributed under the **MIT License**. See ``LICENSE`` for more information.
+
+[release-image]: https://img.shields.io/github/release/Sematre/DSBmobile-API.svg?style=flat-square
+[release-url]: https://github.com/Sematre/DSBmobile-API/releases
+
+[travis-image]: https://img.shields.io/travis/com/Sematre/DSBmobile-API.svg?style=flat-square
+[travis-url]: https://travis-ci.com/Sematre/DSBmobile-API
+
+[license-image]: https://img.shields.io/github/license/Sematre/DSBmobile-API.svg?style=flat-square
+[license-url]: https://github.com/Sematre/DSBmobile-API/blob/master/LICENSE

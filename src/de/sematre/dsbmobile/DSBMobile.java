@@ -25,11 +25,11 @@ public class DSBMobile implements Serializable, Cloneable {
 
 	public DSBMobile(String username, String password) {
 		String json = getStringFromURL(URL_PREFIX + "/authid/" + username + "/" + password);
-		if (json == null) throw new IllegalArgumentException("Username or password is incorrect!");
+		if (json == null) throw new IllegalArgumentException("Wrong username or password");
 
 		JsonArray jArray = gson.fromJson(("[" + json + "]"), JsonArray.class);
 		String key = jArray.get(0).getAsString();
-		if (key.equals("00000000-0000-0000-0000-000000000000")) throw new IllegalArgumentException("Username or password is incorrect!");
+		if (key.equals("00000000-0000-0000-0000-000000000000")) throw new IllegalArgumentException("Wrong username or password");
 		this.key = key;
 	}
 
