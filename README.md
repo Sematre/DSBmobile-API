@@ -74,5 +74,5 @@ Distributed under the **MIT License**. See ``LICENSE`` for more information.
 [travis-image]: https://img.shields.io/travis/com/Sematre/DSBmobile-API.svg?style=flat-square
 [travis-url]: https://travis-ci.com/Sematre/DSBmobile-API
 
-[license-image]: https://img.shields.io/github/license/Sematre/DSBmobile-API.svg?style=flat-square
+[license-image]: https://img.shields.io/badge/license-MIT-green.svg?style=flat-square
 [license-url]: https://github.com/Sematre/DSBmobile-API/blob/master/LICENSE
