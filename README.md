@@ -1,6 +1,5 @@
 # DSBmobile-API
 [![Release Version][release-image]][release-url]
-[![Build Status][travis-image]][travis-url]
 [![License][license-image]][license-url]
 > Unofficial DSBmobile API for Java.
 
@@ -71,8 +70,5 @@ Distributed under the **MIT License**. See ``LICENSE`` for more information.
 [release-image]: https://img.shields.io/github/release/Sematre/DSBmobile-API.svg?style=flat-square
 [release-url]: https://github.com/Sematre/DSBmobile-API/releases
 
-[travis-image]: https://img.shields.io/travis/com/Sematre/DSBmobile-API.svg?style=flat-square
-[travis-url]: https://travis-ci.com/Sematre/DSBmobile-API
-
-[license-image]: https://img.shields.io/github/license/Sematre/DSBmobile-API.svg?style=flat-square
+[license-image]: https://img.shields.io/badge/license-MIT-green.svg?style=flat-square
 [license-url]: https://github.com/Sematre/DSBmobile-API/blob/master/LICENSE
