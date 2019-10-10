@@ -36,7 +36,7 @@ Work in progress.
 Gradle:
 ```gradle
 dependencies {
-	implementation 'de.sematre.dsbmobile:DSBmobile-API:1.2'
+	implementation 'de.sematre.dsbmobile:DSBmobile-API:1.3'
 }
 ```
 
@@ -45,11 +45,13 @@ Maven:
 <dependency>
 	<groupId>de.sematre.dsbmobile</groupId>
 	<artifactId>DSBmobile-API</artifactId>
-	<version>1.2</version>
+	<version>1.3</version>
 </dependency>
 ```
 
 ## Release History
+* 1.3
+	* Web handler update
 * 1.2
     * Maven implementation
 * 1.1
@@ -62,7 +64,7 @@ Maven:
 - [Google Gson](https://github.com/google/gson) ([Apache 2 license](https://github.com/google/gson/blob/master/LICENSE))
 
 ## Info
-© Sematre 2018
+© Sematre 2019
 
 Distributed under the **MIT License**. See ``LICENSE`` for more information.
 
