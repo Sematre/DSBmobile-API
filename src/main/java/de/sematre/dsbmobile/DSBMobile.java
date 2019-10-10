@@ -1,133 +1,255 @@
 package de.sematre.dsbmobile;
 
-import java.io.FileNotFoundException;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.Serializable;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import de.sematre.dsbmobile.utils.Base64;
+
 public class DSBMobile implements Serializable, Cloneable {
 
 	private static final long serialVersionUID = -5265820858352981519L;
-	private static final String URL_PREFIX = "https://iphone.dsbcontrol.de/iPhoneService.svc/DSB";
 	private static final Gson gson = new Gson();
-	private String key = "";
 
-	public DSBMobile(String key) {
-		this.key = key;
-	}
+	private HashMap<String, Object> args = new HashMap<String, Object>();
 
 	public DSBMobile(String username, String password) {
-		String json = getStringFromURL(URL_PREFIX + "/authid/" + username + "/" + password);
-		if (json == null) throw new IllegalArgumentException("Wrong username or password");
-
-		JsonArray jArray = gson.fromJson(("[" + json + "]"), JsonArray.class);
-		String key = jArray.get(0).getAsString();
-		if (key.equals("00000000-0000-0000-0000-000000000000")) throw new IllegalArgumentException("Wrong username or password");
-		this.key = key;
+		args.put("UserId", username);
+		args.put("UserPw", password);
+		args.put("Abos", new ArrayList<String>());
+		args.put("AppVersion", "2.3");
+		args.put("Language", "de");
+		args.put("OsVersion", "");
+		args.put("AppId", "");
+		args.put("Device", "WebApp");
+		args.put("PushId", "");
+		args.put("BundleId", "de.heinekingmedia.inhouse.dsbmobile.web");
 	}
 
 	public ArrayList<TimeTable> getTimeTables() {
-		ArrayList<TimeTable> tables = new ArrayList<>();
-
-		String json = getStringFromURL(URL_PREFIX + "/timetables/" + key);
-		for (JsonElement jElement : gson.fromJson(json, JsonArray.class)) {
-			tables.add(new TimeTable(jElement.getAsJsonObject()));
-		}
-
-		return tables;
-	}
-
-	public ArrayList<News> getNews() {
-		ArrayList<News> tables = new ArrayList<>();
-
-		String json = getStringFromURL(URL_PREFIX + "/news/" + key);
-		for (JsonElement jElement : gson.fromJson(json, JsonArray.class)) {
-			tables.add(new News(jElement.getAsJsonObject()));
-		}
-
-		return tables;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	private String getStringFromURL(String url) {
 		try {
-			String text = "";
-			Scanner scanner = new Scanner(new URL(url).openStream());
-			while (scanner.hasNextLine()) {
-				text += scanner.nextLine().trim();
+			JsonObject mainObject = findJsonObjectByTitle(pullData().get("ResultMenuItems").getAsJsonArray(), "Inhalte");
+			Objects.requireNonNull(mainObject, "Server data doesn't contain content!");
+
+			JsonObject jObject = findJsonObjectByTitle(mainObject.get("Childs").getAsJsonArray(), "Pläne");
+			Objects.requireNonNull(jObject, "Server data doesn't contain a time table!");
+
+			ArrayList<TimeTable> tables = new ArrayList<>();
+			for (JsonElement jElement : jObject.get("Root").getAsJsonObject().get("Childs").getAsJsonArray()) {
+				tables.add(new TimeTable(jElement.getAsJsonObject()));
 			}
 
-			scanner.close();
-			return text;
-		} catch (FileNotFoundException e) {
-			return null;
+			return tables;
 		} catch (IOException e) {
-			e.printStackTrace();
-			return "";
+			throw new RuntimeException("Unable to pull data from server!", e);
 		}
+	}
+
+	@Deprecated
+	public ArrayList<News> getNews() {
+		throw new UnsupportedOperationException("Not implemented, yet!");
+	}
+
+	public JsonObject pullData() throws IOException {
+		HttpsURLConnection connection = (HttpsURLConnection) new URL("https://www.dsbmobile.de/JsonHandlerWeb.ashx/GetData").openConnection();
+		connection.setRequestMethod("POST");
+		connection.addRequestProperty("Accept", "*/*");
+		connection.addRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0");
+		connection.addRequestProperty("Content-Type", "application/json;charset=utf-8");
+		connection.addRequestProperty("Bundle_ID", "de.heinekingmedia.inhouse.dsbmobile.web");
+		connection.addRequestProperty("Referer", "https://www.dsbmobile.de/default.aspx");
+
+		connection.setDoOutput(true);
+		connection.getOutputStream().write(packageArgs().getBytes("UTF-8"));
+
+		StringBuilder builder = new StringBuilder();
+		Reader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+		for (int c; (c = in.read()) >= 0;) {
+			builder.append((char) c);
+		}
+
+		return gson.fromJson(decompressGZIP(Base64.decode(gson.fromJson(builder.toString(), JsonObject.class).get("d").getAsString())), JsonObject.class);
+	}
+
+	private String packageArgs() throws IOException {
+		String date = getJavascriptTime(new Date());
+		args.put("Date", date);
+		args.put("LastUpdate", date);
+
+		HashMap<String, Object> innerArgs = new HashMap<String, Object>();
+		innerArgs.put("Data", Base64.encode(compressGZIP(unescapeString(gson.toJson(args)))));
+		innerArgs.put("DataType", 1);
+
+		HashMap<String, Object> outerArgs = new HashMap<String, Object>();
+		outerArgs.put("req", innerArgs);
+		return unescapeString(gson.toJson(outerArgs));
+	}
+
+	private JsonObject findJsonObjectByTitle(JsonArray sourceArray, String title) {
+		for (JsonElement jElement : sourceArray) {
+			if (!jElement.isJsonObject()) continue;
+			JsonObject jObject = jElement.getAsJsonObject();
+
+			if (!jObject.has("Title")) continue;
+			String objectTitle = jObject.get("Title").getAsString();
+
+			if (objectTitle.equalsIgnoreCase(title)) return jObject;
+		}
+
+		return null;
+	}
+
+	private String getJavascriptTime(Date date) {
+		return new SimpleDateFormat("E MMM dd yyyy HH:mm:ss XX", Locale.ENGLISH).format(date);
+	}
+
+	public static byte[] compressGZIP(String data) throws IOException {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length());
+
+		GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
+		gzipOutputStream.write(data.getBytes("UTF-8"));
+		gzipOutputStream.close();
+
+		return outputStream.toByteArray();
+	}
+
+	public static String decompressGZIP(byte[] data) throws IOException {
+		GZIPInputStream inputStream = new GZIPInputStream(new ByteArrayInputStream(data));
+
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available());
+		outputStream.write(inputStream.readAllBytes());
+		outputStream.close();
+
+		byte[] bytes = outputStream.toByteArray();
+		return new String(bytes, "UTF-8");
+	}
+
+	private String unescapeString(String text) {
+		StringBuilder builder = new StringBuilder(text.length());
+		for (int i = 0; i < text.length(); i++) {
+			char ch = text.charAt(i);
+			if (ch == '\\') {
+				char nextChar = (i == text.length() - 1) ? '\\' : text.charAt(i + 1);
+
+				// Octal escape?
+				if (nextChar >= '0' && nextChar <= '7') {
+					String code = "" + nextChar;
+					i++;
+
+					if ((i < text.length() - 1) && text.charAt(i + 1) >= '0' && text.charAt(i + 1) <= '7') {
+						code += text.charAt(i + 1);
+						i++;
+
+						if ((i < text.length() - 1) && text.charAt(i + 1) >= '0' && text.charAt(i + 1) <= '7') {
+							code += text.charAt(i + 1);
+							i++;
+						}
+					}
+
+					builder.append((char) Integer.parseInt(code, 8));
+					continue;
+				}
+
+				switch (nextChar) {
+					case '\\':
+						ch = '\\';
+						break;
+					case 'b':
+						ch = '\b';
+						break;
+					case 'f':
+						ch = '\f';
+						break;
+					case 'n':
+						ch = '\n';
+						break;
+					case 'r':
+						ch = '\r';
+						break;
+					case 't':
+						ch = '\t';
+						break;
+					case '\"':
+						ch = '\"';
+						break;
+					case '\'':
+						ch = '\'';
+						break;
+
+					// Hex Unicode: u????
+					case 'u':
+						if (i >= text.length() - 5) {
+							ch = 'u';
+							break;
+						}
+
+						int code = Integer.parseInt("" + text.charAt(i + 2) + text.charAt(i + 3) + text.charAt(i + 4) + text.charAt(i + 5), 16);
+						builder.append(Character.toChars(code));
+						i += 5;
+						continue;
+				}
+
+				i++;
+			}
+
+			builder.append(ch);
+		}
+
+		return builder.toString();
 	}
 
 	public class TimeTable implements Serializable, Cloneable {
 
 		private static final long serialVersionUID = 553852884423090700L;
-		private Boolean isHtml = false;
-		private String date = "";
-		private String groupName = "";
+		private UUID uuid = null;
 		private String title = "";
+		private String detail = "";
+		private String date = "";
 		private String url = "";
 
-		public TimeTable(Boolean isHtml, String date, String groupName, String title, String url) {
-			this.isHtml = isHtml;
-			this.date = date;
-			this.groupName = groupName;
+		public TimeTable(UUID uuid, String title, String detail, String date, String url) {
+			this.uuid = uuid;
 			this.title = title;
+			this.detail = detail;
+			this.date = date;
 			this.url = url;
 		}
 
 		public TimeTable(JsonObject jsonObject) {
-			this.isHtml = jsonObject.get("ishtml").getAsBoolean();
-			this.date = jsonObject.get("timetabledate").getAsString();
-			this.groupName = jsonObject.get("timetablegroupname").getAsString();
-			this.title = jsonObject.get("timetabletitle").getAsString();
-			this.url = jsonObject.get("timetableurl").getAsString();
+			this.uuid = UUID.fromString(jsonObject.get("Id").getAsString());
+			this.title = jsonObject.get("Title").getAsString();
+			this.detail = jsonObject.get("Detail").getAsString();
+			this.date = jsonObject.get("Date").getAsString();
+			this.url = jsonObject.get("Childs").getAsJsonArray().get(0).getAsJsonObject().get("Detail").getAsString();
 		}
 
-		public Boolean isHtml() {
-			return isHtml;
+		public UUID getUUID() {
+			return uuid;
 		}
 
-		public void setHtml(Boolean isHtml) {
-			this.isHtml = isHtml;
-		}
-
-		public String getDate() {
-			return date;
-		}
-
-		public void setDate(String date) {
-			this.date = date;
-		}
-
-		public String getGroupName() {
-			return groupName;
-		}
-
-		public void setGroupName(String groupName) {
-			this.groupName = groupName;
+		public void setUUID(UUID uuid) {
+			this.uuid = uuid;
 		}
 
 		public String getTitle() {
@@ -136,6 +258,22 @@ public class DSBMobile implements Serializable, Cloneable {
 
 		public void setTitle(String title) {
 			this.title = title;
+		}
+
+		public String getDetail() {
+			return detail;
+		}
+
+		public void setDetail(String detail) {
+			this.detail = detail;
+		}
+
+		public String getDate() {
+			return date;
+		}
+
+		public void setDate(String date) {
+			this.date = date;
 		}
 
 		public String getUrl() {
@@ -155,12 +293,12 @@ public class DSBMobile implements Serializable, Cloneable {
 			if (date == null) {
 				if (other.date != null) return false;
 			} else if (!date.equals(other.date)) return false;
-			if (groupName == null) {
-				if (other.groupName != null) return false;
-			} else if (!groupName.equals(other.groupName)) return false;
-			if (isHtml == null) {
-				if (other.isHtml != null) return false;
-			} else if (!isHtml.equals(other.isHtml)) return false;
+			if (detail == null) {
+				if (other.detail != null) return false;
+			} else if (!detail.equals(other.detail)) return false;
+			if (uuid == null) {
+				if (other.uuid != null) return false;
+			} else if (!uuid.equals(other.uuid)) return false;
 			if (title == null) {
 				if (other.title != null) return false;
 			} else if (!title.equals(other.title)) return false;
@@ -172,7 +310,7 @@ public class DSBMobile implements Serializable, Cloneable {
 
 		@Override
 		public String toString() {
-			return "{\"isHtml\":\"" + isHtml + "\", \"date\":\"" + date + "\", \"groupName\":\"" + groupName + "\", \"title\":\"" + title + "\", \"url\":\"" + url + "\"}";
+			return "{\"uuid\":\"" + uuid + "\", \"date\":\"" + date + "\", \"detail\":\"" + detail + "\", \"title\":\"" + title + "\", \"url\":\"" + url + "\"}";
 		}
 	}
 
