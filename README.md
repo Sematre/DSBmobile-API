@@ -12,47 +12,25 @@ A simple Java library for DSBmobile.
 
 ### TimeTable
 ```java
-try {
-	DSBMobile dsbMobile = new DSBMobile("username", "password");
+DSBMobile dsbMobile = new DSBMobile("username", "password");
 
-	ArrayList<TimeTable> timeTables = dsbMobile.getTimeTables();
-	for (TimeTable timeTable : timeTables) {
+ArrayList<TimeTable> timeTables = dsbMobile.getTimeTables();
+for (TimeTable timeTable : timeTables) {
 
-		Boolean isHtml = timeTable.isHtml();
+	UUID uuid = timeTable.getUUID();
 
-		String date = timeTable.getDate();
-		String groupName = timeTable.getGroupName();
-		String title = timeTable.getTitle();
-		String url = timeTable.getUrl();
+	String title = timeTable.getTitle();
+	String detail = timeTable.getDetail();
 
-	}
-} catch (IllegalArgumentException e) {
-	// Wrong username or password!
+	String date = timeTable.getDate();
+	String url = timeTable.getUrl();
+
 }
 ```
-Note: The try-catch block is not necessary.
 
 ### News
-```java
-try {
-	DSBMobile dsbMobile = new DSBMobile("username", "password");
 
-	ArrayList<News> newsList = dsbMobile.getNews();
-	for (News news : newsList) {
-
-		String id = news.getId();
-		String headLine = news.getHeadLine();
-		String date = news.getDate();
-		String imageUrl = news.getImageUrl();
-		String shortMessage = news.getShortMessage();
-		String wholeMessage = news.getWholeMessage();
-
-	}
-} catch (IllegalArgumentException e) {
-	// Wrong username or password!
-}
-```
-Note: The try-catch block is not necessary.
+Work in progress.
 
 ## Implementation
 Gradle:
