@@ -136,11 +136,15 @@ public class DSBMobile implements Serializable, Cloneable {
 
 	public static String decompressGZIP(byte[] data) throws IOException {
 		GZIPInputStream inputStream = new GZIPInputStream(new ByteArrayInputStream(data));
-
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available());
-		outputStream.write(inputStream.readAllBytes());
-		outputStream.close();
+		byte[] buffer = new byte[1024];
 
+		int len;
+		while ((len = inputStream.read(buffer)) > 0) {
+			outputStream.write(buffer, 0, len);
+		}
+
+		outputStream.close();
 		byte[] bytes = outputStream.toByteArray();
 		return new String(bytes, "UTF-8");
 	}
