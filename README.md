@@ -36,7 +36,7 @@ Work in progress.
 Gradle:
 ```gradle
 dependencies {
-	implementation 'de.sematre.dsbmobile:DSBmobile-API:1.3'
+	implementation 'de.sematre.dsbmobile:DSBmobile-API:1.4'
 }
 ```
 
@@ -45,11 +45,15 @@ Maven:
 <dependency>
 	<groupId>de.sematre.dsbmobile</groupId>
 	<artifactId>DSBmobile-API</artifactId>
-	<version>1.3</version>
+	<version>1.4</version>
 </dependency>
 ```
 
 ## Release History
+* 1.4
+	* Change time zone formatting: ISO 8601 -> RFC 822
+	* Make GZIP methods private
+	* Merge: Base64 -> DSBMobile
 * 1.3
 	* Web handler update
 * 1.2
