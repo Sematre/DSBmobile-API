@@ -123,7 +123,7 @@ public class DSBMobile implements Serializable, Cloneable {
 		return new SimpleDateFormat("E MMM dd yyyy HH:mm:ss XX", Locale.ENGLISH).format(date);
 	}
 
-	public static byte[] compressGZIP(String data) throws IOException {
+	private byte[] compressGZIP(String data) throws IOException {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length());
 
 		GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
@@ -133,7 +133,7 @@ public class DSBMobile implements Serializable, Cloneable {
 		return outputStream.toByteArray();
 	}
 
-	public static String decompressGZIP(byte[] data) throws IOException {
+	private String decompressGZIP(byte[] data) throws IOException {
 		GZIPInputStream inputStream = new GZIPInputStream(new ByteArrayInputStream(data));
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available());
 		byte[] buffer = new byte[1024];
