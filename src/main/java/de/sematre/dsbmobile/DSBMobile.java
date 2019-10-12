@@ -120,7 +120,7 @@ public class DSBMobile implements Serializable, Cloneable {
 	}
 
 	private String getJavascriptTime(Date date) {
-		return new SimpleDateFormat("E MMM dd yyyy HH:mm:ss XX", Locale.ENGLISH).format(date);
+		return new SimpleDateFormat("E MMM dd yyyy HH:mm:ss Z", Locale.ENGLISH).format(date);
 	}
 
 	private byte[] compressGZIP(String data) throws IOException {
