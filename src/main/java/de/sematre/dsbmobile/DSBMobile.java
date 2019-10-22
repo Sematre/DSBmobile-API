@@ -56,7 +56,9 @@ public class DSBMobile implements Serializable, Cloneable {
 
 			ArrayList<TimeTable> tables = new ArrayList<>();
 			for (JsonElement jElement : jObject.get("Root").getAsJsonObject().get("Childs").getAsJsonArray()) {
-				tables.add(new TimeTable(jElement.getAsJsonObject()));
+				for (JsonElement jElementChild : jElement.getAsJsonObject().get("Childs").getAsJsonArray()) {
+					tables.add(new TimeTable(jElementChild.getAsJsonObject()));
+				}
 			}
 
 			return tables;
@@ -244,7 +246,7 @@ public class DSBMobile implements Serializable, Cloneable {
 			this.title = jsonObject.get("Title").getAsString();
 			this.detail = jsonObject.get("Detail").getAsString();
 			this.date = jsonObject.get("Date").getAsString();
-			this.url = jsonObject.get("Childs").getAsJsonArray().get(0).getAsJsonObject().get("Detail").getAsString();
+			this.url = jsonObject.get("Detail").getAsString();
 		}
 
 		public UUID getUUID() {
