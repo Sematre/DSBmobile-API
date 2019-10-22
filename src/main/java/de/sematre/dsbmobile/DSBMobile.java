@@ -36,14 +36,14 @@ public class DSBMobile implements Serializable, Cloneable {
 	public DSBMobile(String username, String password) {
 		args.put("UserId", username);
 		args.put("UserPw", password);
-		args.put("Abos", new ArrayList<String>());
+		args.put("AppId", UUID.randomUUID().toString());
 		args.put("AppVersion", "2.3");
 		args.put("Language", "de");
 		args.put("OsVersion", "");
-		args.put("AppId", "");
-		args.put("Device", "WebApp");
+		args.put("AppVersion", "");
+		args.put("Device", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0");
 		args.put("PushId", "");
-		args.put("BundleId", "de.heinekingmedia.inhouse.dsbmobile.web");
+		args.put("BundleId", "de.heinekingmedia.dsbmobile");
 	}
 
 	public ArrayList<TimeTable> getTimeTables() {
@@ -71,7 +71,7 @@ public class DSBMobile implements Serializable, Cloneable {
 	}
 
 	public JsonObject pullData() throws IOException {
-		HttpsURLConnection connection = (HttpsURLConnection) new URL("https://www.dsbmobile.de/JsonHandlerWeb.ashx/GetData").openConnection();
+		HttpsURLConnection connection = (HttpsURLConnection) new URL("https://www.dsbmobile.de/JsonHandler.ashx/GetData").openConnection();
 		connection.setRequestMethod("POST");
 		connection.addRequestProperty("Accept", "*/*");
 		connection.addRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0");
