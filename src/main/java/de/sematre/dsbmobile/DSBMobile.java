@@ -49,10 +49,10 @@ public class DSBMobile implements Serializable, Cloneable {
 	public ArrayList<TimeTable> getTimeTables() {
 		try {
 			JsonObject mainObject = findJsonObjectByTitle(pullData().get("ResultMenuItems").getAsJsonArray(), "Inhalte");
-			Objects.requireNonNull(mainObject, "Server data doesn't contain content!");
+			Objects.requireNonNull(mainObject, "Server response doesn't contain content!");
 
 			JsonObject jObject = findJsonObjectByTitle(mainObject.get("Childs").getAsJsonArray(), "Pläne");
-			Objects.requireNonNull(jObject, "Server data doesn't contain a time table!");
+			Objects.requireNonNull(jObject, "Server response doesn't contain a time table!");
 
 			ArrayList<TimeTable> tables = new ArrayList<>();
 			for (JsonElement jElement : jObject.get("Root").getAsJsonObject().get("Childs").getAsJsonArray()) {
