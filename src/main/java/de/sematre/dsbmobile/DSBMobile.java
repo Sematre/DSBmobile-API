@@ -92,7 +92,7 @@ public class DSBMobile implements Serializable, Cloneable {
 	}
 
 	private String packageArgs() throws IOException {
-		String date = getJavascriptTime(new Date());
+		String date = getFormattedTime(new Date());
 		args.put("Date", date);
 		args.put("LastUpdate", date);
 
@@ -119,8 +119,8 @@ public class DSBMobile implements Serializable, Cloneable {
 		return null;
 	}
 
-	private String getJavascriptTime(Date date) {
-		return new SimpleDateFormat("E MMM dd yyyy HH:mm:ss Z", Locale.ENGLISH).format(date);
+	private String getFormattedTime(Date date) {
+		return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.ENGLISH).format(date);
 	}
 
 	private String unescapeString(String text) {
