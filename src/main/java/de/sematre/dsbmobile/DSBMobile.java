@@ -34,35 +34,50 @@ public class DSBMobile implements Serializable, Cloneable {
 	public DSBMobile(String username, String password) {
 		args.put("UserId", username);
 		args.put("UserPw", password);
-		args.put("AppId", UUID.randomUUID().toString());
-		args.put("AppVersion", "2.3");
 		args.put("Language", "de");
+
+		args.put("Device", "Nexus 4");
+		args.put("AppId", "414c8312-bbac-4274-b5f4-8bbcfb613580");
+		args.put("AppVersion", "2.3");
 		args.put("OsVersion", "");
-		args.put("AppVersion", "");
-		args.put("Device", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0");
+
 		args.put("PushId", "");
 		args.put("BundleId", "de.heinekingmedia.dsbmobile");
 	}
 
-	public ArrayList<TimeTable> getTimeTables() {
-		try {
-			JsonObject mainObject = findJsonObjectByTitle(pullData().get("ResultMenuItems").getAsJsonArray(), "Inhalte");
-			Objects.requireNonNull(mainObject, "Server response doesn't contain content!");
+	public ArrayList<Table> getTimeTables() {
+		JsonObject mainObject = pullData();
 
-			JsonObject jObject = findJsonObjectByTitle(mainObject.get("Childs").getAsJsonArray(), "Pläne");
-			Objects.requireNonNull(jObject, "Server response doesn't contain a time table!");
+		int resultCode = mainObject.get("Resultcode").getAsInt();
+		if (resultCode != 0) throw new RuntimeException("Server returned result code is " + resultCode + ": " + mainObject.get("ResultStatusInfo").getAsString());
 
-			ArrayList<TimeTable> tables = new ArrayList<>();
-			for (JsonElement jElement : jObject.get("Root").getAsJsonObject().get("Childs").getAsJsonArray()) {
-				for (JsonElement jElementChild : jElement.getAsJsonObject().get("Childs").getAsJsonArray()) {
-					tables.add(new TimeTable(jElementChild.getAsJsonObject()));
-				}
+		JsonObject contentObject = findJsonObjectByTitle(mainObject.get("ResultMenuItems").getAsJsonArray(), "Inhalte");
+		Objects.requireNonNull(contentObject, "Server response doesn't contain content!");
+
+		JsonObject tableObject = findJsonObjectByTitle(contentObject.get("Childs").getAsJsonArray(), "Pläne");
+		Objects.requireNonNull(tableObject, "Server response doesn't contain a table!");
+
+		ArrayList<Table> tables = new ArrayList<>();
+		for (JsonElement jElement : tableObject.get("Root").getAsJsonObject().get("Childs").getAsJsonArray()) {
+			if (!jElement.isJsonObject()) continue;
+			JsonObject jObject = jElement.getAsJsonObject();
+
+			UUID uuid = UUID.fromString(jObject.get("Id").getAsString());
+			String groupName = jObject.get("Title").getAsString();
+			String date = jObject.get("Date").getAsString();
+
+			for (JsonElement jElementChild : jObject.get("Childs").getAsJsonArray()) {
+				if (!jElementChild.isJsonObject()) continue;
+				JsonObject childObject = jElementChild.getAsJsonObject();
+
+				String title = childObject.get("Title").getAsString();
+				String detail = childObject.get("Detail").getAsString();
+
+				tables.add(new Table(uuid, groupName, date, title, detail));
 			}
-
-			return tables;
-		} catch (IOException e) {
-			throw new RuntimeException("Unable to pull data from server!", e);
 		}
+
+		return tables;
 	}
 
 	@Deprecated
@@ -70,25 +85,27 @@ public class DSBMobile implements Serializable, Cloneable {
 		throw new UnsupportedOperationException("Not implemented, yet!");
 	}
 
-	public JsonObject pullData() throws IOException {
-		HttpsURLConnection connection = (HttpsURLConnection) new URL("https://www.dsbmobile.de/JsonHandler.ashx/GetData").openConnection();
-		connection.setRequestMethod("POST");
-		connection.addRequestProperty("Accept", "*/*");
-		connection.addRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0");
-		connection.addRequestProperty("Content-Type", "application/json;charset=utf-8");
-		connection.addRequestProperty("Bundle_ID", "de.heinekingmedia.inhouse.dsbmobile.web");
-		connection.addRequestProperty("Referer", "https://www.dsbmobile.de/default.aspx");
+	public JsonObject pullData() {
+		try {
+			HttpsURLConnection connection = (HttpsURLConnection) new URL("https://www.dsbmobile.de/JsonHandler.ashx/GetData").openConnection();
+			connection.setRequestMethod("POST");
+			connection.addRequestProperty("User-Agent", "Dalvik/2.1.0 (Linux; U; Android 8.1.0; Nexus 4 Build/OPM7.181205.001)");
+			connection.addRequestProperty("Accept-Encoding", "gzip, deflate");
+			connection.addRequestProperty("Content-Type", "application/json;charset=utf-8");
 
-		connection.setDoOutput(true);
-		connection.getOutputStream().write(packageArgs().getBytes("UTF-8"));
+			connection.setDoOutput(true);
+			connection.getOutputStream().write(packageArgs().getBytes("UTF-8"));
 
-		StringBuilder builder = new StringBuilder();
-		Reader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-		for (int c; (c = in.read()) >= 0;) {
-			builder.append((char) c);
-		}
+			StringBuilder builder = new StringBuilder();
+			Reader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+			for (int c; (c = in.read()) >= 0;) {
+				builder.append((char) c);
+			}
 
 			return gson.fromJson(GZIP.decompress(Base64.decode(gson.fromJson(builder.toString(), JsonObject.class).get("d").getAsString())), JsonObject.class);
+		} catch (IOException e) {
+			throw new RuntimeException("Unable to pull data from server!", e);
+		}
 	}
 
 	private String packageArgs() throws IOException {
@@ -111,8 +128,8 @@ public class DSBMobile implements Serializable, Cloneable {
 			JsonObject jObject = jElement.getAsJsonObject();
 
 			if (!jObject.has("Title")) continue;
-			String objectTitle = jObject.get("Title").getAsString();
 
+			String objectTitle = jObject.get("Title").getAsString();
 			if (objectTitle.equalsIgnoreCase(title)) return jObject;
 		}
 
@@ -197,29 +214,24 @@ public class DSBMobile implements Serializable, Cloneable {
 		return builder.toString();
 	}
 
-	public class TimeTable implements Serializable, Cloneable {
+	public class Table implements Serializable, Cloneable {
 
 		private static final long serialVersionUID = 553852884423090700L;
+
 		private UUID uuid = null;
+		private String groupName = "";
+		private String date = "";
+
 		private String title = "";
 		private String detail = "";
-		private String date = "";
-		private String url = "";
 
-		public TimeTable(UUID uuid, String title, String detail, String date, String url) {
+		public Table(UUID uuid, String groupName, String date, String title, String detail) {
 			this.uuid = uuid;
+			this.groupName = groupName;
+			this.date = date;
+
 			this.title = title;
 			this.detail = detail;
-			this.date = date;
-			this.url = url;
-		}
-
-		public TimeTable(JsonObject jsonObject) {
-			this.uuid = UUID.fromString(jsonObject.get("Id").getAsString());
-			this.title = jsonObject.get("Title").getAsString();
-			this.detail = jsonObject.get("Detail").getAsString();
-			this.date = jsonObject.get("Date").getAsString();
-			this.url = jsonObject.get("Detail").getAsString();
 		}
 
 		public UUID getUUID() {
@@ -228,6 +240,22 @@ public class DSBMobile implements Serializable, Cloneable {
 
 		public void setUUID(UUID uuid) {
 			this.uuid = uuid;
+		}
+
+		public String getGroupName() {
+			return groupName;
+		}
+
+		public void setGroupName(String groupName) {
+			this.groupName = groupName;
+		}
+
+		public String getDate() {
+			return date;
+		}
+
+		public void setDate(String date) {
+			this.date = date;
 		}
 
 		public String getTitle() {
@@ -246,49 +274,33 @@ public class DSBMobile implements Serializable, Cloneable {
 			this.detail = detail;
 		}
 
-		public String getDate() {
-			return date;
-		}
-
-		public void setDate(String date) {
-			this.date = date;
-		}
-
-		public String getUrl() {
-			return url;
-		}
-
-		public void setUrl(String url) {
-			this.url = url;
-		}
-
 		@Override
 		public boolean equals(Object obj) {
 			if (this == obj) return true;
 			if (obj == null) return false;
 			if (getClass() != obj.getClass()) return false;
-			TimeTable other = (TimeTable) obj;
+			Table other = (Table) obj;
 			if (date == null) {
 				if (other.date != null) return false;
 			} else if (!date.equals(other.date)) return false;
 			if (detail == null) {
 				if (other.detail != null) return false;
 			} else if (!detail.equals(other.detail)) return false;
-			if (uuid == null) {
-				if (other.uuid != null) return false;
-			} else if (!uuid.equals(other.uuid)) return false;
+			if (groupName == null) {
+				if (other.groupName != null) return false;
+			} else if (!groupName.equals(other.groupName)) return false;
 			if (title == null) {
 				if (other.title != null) return false;
 			} else if (!title.equals(other.title)) return false;
-			if (url == null) {
-				if (other.url != null) return false;
-			} else if (!url.equals(other.url)) return false;
+			if (uuid == null) {
+				if (other.uuid != null) return false;
+			} else if (!uuid.equals(other.uuid)) return false;
 			return true;
 		}
 
 		@Override
 		public String toString() {
-			return "{\"uuid\":\"" + uuid + "\", \"date\":\"" + date + "\", \"detail\":\"" + detail + "\", \"title\":\"" + title + "\", \"url\":\"" + url + "\"}";
+			return "{\"uuid\": \"" + uuid + "\", \"groupName\": \"" + groupName + "\", \"date\": \"" + date + "\", \"title\": \"" + title + "\", \"detail\": \"" + detail + "\"}";
 		}
 	}
 
