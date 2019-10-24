@@ -1,8 +1,6 @@
 package de.sematre.dsbmobile;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -15,8 +13,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -26,6 +22,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import de.sematre.dsbmobile.utils.Base64;
+import de.sematre.dsbmobile.utils.GZIP;
 
 public class DSBMobile implements Serializable, Cloneable {
 
@@ -91,7 +88,7 @@ public class DSBMobile implements Serializable, Cloneable {
 			builder.append((char) c);
 		}
 
-		return gson.fromJson(decompressGZIP(Base64.decode(gson.fromJson(builder.toString(), JsonObject.class).get("d").getAsString())), JsonObject.class);
+			return gson.fromJson(GZIP.decompress(Base64.decode(gson.fromJson(builder.toString(), JsonObject.class).get("d").getAsString())), JsonObject.class);
 	}
 
 	private String packageArgs() throws IOException {
@@ -100,7 +97,7 @@ public class DSBMobile implements Serializable, Cloneable {
 		args.put("LastUpdate", date);
 
 		HashMap<String, Object> innerArgs = new HashMap<String, Object>();
-		innerArgs.put("Data", Base64.encode(compressGZIP(unescapeString(gson.toJson(args)))));
+		innerArgs.put("Data", Base64.encode(GZIP.compress(unescapeString(gson.toJson(args)))));
 		innerArgs.put("DataType", 1);
 
 		HashMap<String, Object> outerArgs = new HashMap<String, Object>();
@@ -124,31 +121,6 @@ public class DSBMobile implements Serializable, Cloneable {
 
 	private String getJavascriptTime(Date date) {
 		return new SimpleDateFormat("E MMM dd yyyy HH:mm:ss Z", Locale.ENGLISH).format(date);
-	}
-
-	private byte[] compressGZIP(String data) throws IOException {
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length());
-
-		GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
-		gzipOutputStream.write(data.getBytes("UTF-8"));
-		gzipOutputStream.close();
-
-		return outputStream.toByteArray();
-	}
-
-	private String decompressGZIP(byte[] data) throws IOException {
-		GZIPInputStream inputStream = new GZIPInputStream(new ByteArrayInputStream(data));
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available());
-		byte[] buffer = new byte[1024];
-
-		int len;
-		while ((len = inputStream.read(buffer)) > 0) {
-			outputStream.write(buffer, 0, len);
-		}
-
-		outputStream.close();
-		byte[] bytes = outputStream.toByteArray();
-		return new String(bytes, "UTF-8");
 	}
 
 	private String unescapeString(String text) {
