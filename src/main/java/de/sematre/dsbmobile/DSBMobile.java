@@ -137,7 +137,7 @@ public class DSBMobile implements Serializable, Cloneable {
 	}
 
 	private String getFormattedTime(Date date) {
-		return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.ENGLISH).format(date);
+		return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ENGLISH).format(date);
 	}
 
 	private String unescapeString(String text) {
