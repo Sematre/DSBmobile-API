@@ -38,8 +38,8 @@ public class DSBMobile implements Serializable, Cloneable {
 
 		args.put("Device", "Nexus 4");
 		args.put("AppId", "414c8312-bbac-4274-b5f4-8bbcfb613580");
-		args.put("AppVersion", "2.3");
-		args.put("OsVersion", "");
+		args.put("AppVersion", "2.5.9");
+		args.put("OsVersion", "27 8.1.0");
 
 		args.put("PushId", "");
 		args.put("BundleId", "de.heinekingmedia.dsbmobile");
