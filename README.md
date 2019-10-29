@@ -19,11 +19,11 @@ for (TimeTable timeTable : timeTables) {
 
 	UUID uuid = timeTable.getUUID();
 
+	String groupName = timeTable.getGroupName();
+	String date = timeTable.getDate();
+
 	String title = timeTable.getTitle();
 	String detail = timeTable.getDetail();
-
-	String date = timeTable.getDate();
-	String url = timeTable.getUrl();
 
 }
 ```
