@@ -45,7 +45,7 @@ public class DSBMobile implements Serializable, Cloneable {
 		args.put("BundleId", "de.heinekingmedia.dsbmobile");
 	}
 
-	public ArrayList<Table> getTimeTables() {
+	public ArrayList<TimeTable> getTimeTables() {
 		JsonObject mainObject = pullData();
 
 		int resultCode = mainObject.get("Resultcode").getAsInt();
@@ -57,7 +57,7 @@ public class DSBMobile implements Serializable, Cloneable {
 		JsonObject tableObject = findJsonObjectByTitle(contentObject.get("Childs").getAsJsonArray(), "Pläne");
 		Objects.requireNonNull(tableObject, "Server response doesn't contain a table!");
 
-		ArrayList<Table> tables = new ArrayList<>();
+		ArrayList<TimeTable> tables = new ArrayList<>();
 		for (JsonElement jElement : tableObject.get("Root").getAsJsonObject().get("Childs").getAsJsonArray()) {
 			if (!jElement.isJsonObject()) continue;
 			JsonObject jObject = jElement.getAsJsonObject();
@@ -73,7 +73,7 @@ public class DSBMobile implements Serializable, Cloneable {
 				String title = childObject.get("Title").getAsString();
 				String detail = childObject.get("Detail").getAsString();
 
-				tables.add(new Table(uuid, groupName, date, title, detail));
+				tables.add(new TimeTable(uuid, groupName, date, title, detail));
 			}
 		}
 
@@ -214,7 +214,7 @@ public class DSBMobile implements Serializable, Cloneable {
 		return builder.toString();
 	}
 
-	public class Table implements Serializable, Cloneable {
+	public class TimeTable implements Serializable, Cloneable {
 
 		private static final long serialVersionUID = 553852884423090700L;
 
@@ -225,7 +225,7 @@ public class DSBMobile implements Serializable, Cloneable {
 		private String title = "";
 		private String detail = "";
 
-		public Table(UUID uuid, String groupName, String date, String title, String detail) {
+		public TimeTable(UUID uuid, String groupName, String date, String title, String detail) {
 			this.uuid = uuid;
 			this.groupName = groupName;
 			this.date = date;
@@ -279,7 +279,7 @@ public class DSBMobile implements Serializable, Cloneable {
 			if (this == obj) return true;
 			if (obj == null) return false;
 			if (getClass() != obj.getClass()) return false;
-			Table other = (Table) obj;
+			TimeTable other = (TimeTable) obj;
 			if (date == null) {
 				if (other.date != null) return false;
 			} else if (!date.equals(other.date)) return false;
