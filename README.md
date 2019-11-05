@@ -36,7 +36,7 @@ Work in progress.
 Gradle:
 ```gradle
 dependencies {
-	implementation 'de.sematre.dsbmobile:DSBmobile-API:1.6'
+	implementation 'de.sematre.dsbmobile:DSBmobile-API:1.7'
 }
 ```
 
@@ -45,11 +45,13 @@ Maven:
 <dependency>
 	<groupId>de.sematre.dsbmobile</groupId>
 	<artifactId>DSBmobile-API</artifactId>
-	<version>1.6</version>
+	<version>1.7</version>
 </dependency>
 ```
 
 ## Release History
+* 1.7
+	* Make UUID random
 * 1.6
 	* Performance improvement
 * 1.5
