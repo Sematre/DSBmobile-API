@@ -80,9 +80,33 @@ public class DSBMobile implements Serializable, Cloneable {
 		return tables;
 	}
 
-	@Deprecated
 	public ArrayList<News> getNews() {
-		throw new UnsupportedOperationException("Not implemented, yet!");
+		JsonObject mainObject = pullData();
+
+		int resultCode = mainObject.get("Resultcode").getAsInt();
+		if (resultCode != 0) throw new RuntimeException("Server returned result code is " + resultCode + ": " + mainObject.get("ResultStatusInfo").getAsString());
+
+		JsonObject contentObject = findJsonObjectByTitle(mainObject.get("ResultMenuItems").getAsJsonArray(), "Inhalte");
+		Objects.requireNonNull(contentObject, "Server response doesn't contain content!");
+
+		JsonObject tableObject = findJsonObjectByTitle(contentObject.get("Childs").getAsJsonArray(), "News");
+		Objects.requireNonNull(tableObject, "Server response doesn't contain news!");
+
+		ArrayList<News> news = new ArrayList<>();
+		for (JsonElement jElement : tableObject.get("Root").getAsJsonObject().get("Childs").getAsJsonArray()) {
+			if (!jElement.isJsonObject()) continue;
+			JsonObject jObject = jElement.getAsJsonObject();
+
+			UUID uuid = UUID.fromString(jObject.get("Id").getAsString());
+			String date = jObject.get("Date").getAsString();
+
+			String title = jObject.get("Title").getAsString();
+			String detail = jObject.get("Detail").getAsString();
+
+			news.add(new News(uuid, date, title, detail));
+		}
+
+		return news;
 	}
 
 	public JsonObject pullData() {
@@ -307,37 +331,27 @@ public class DSBMobile implements Serializable, Cloneable {
 	public class News implements Serializable, Cloneable {
 
 		private static final long serialVersionUID = 2336407351548626614L;
-		private String headLine = "";
+
+		private UUID uuid = null;
 		private String date = "";
-		private String id = "";
-		private String imageUrl = "";
-		private String shortMessage = "";
-		private String wholeMessage = "";
 
-		public News(String headLine, String date, String id, String imageUrl, String shortMessage, String wholeMessage) {
-			this.headLine = headLine;
+		private String title = "";
+		private String detail = "";
+
+		public News(UUID uuid, String date, String title, String detail) {
+			this.uuid = uuid;
 			this.date = date;
-			this.id = id;
-			this.imageUrl = imageUrl;
-			this.shortMessage = shortMessage;
-			this.wholeMessage = wholeMessage;
+
+			this.title = title;
+			this.detail = detail;
 		}
 
-		public News(JsonObject jsonObject) {
-			this.headLine = jsonObject.get("headline").getAsString();
-			this.date = jsonObject.get("newsdate").getAsString();
-			this.id = jsonObject.get("newsid").getAsString();
-			this.imageUrl = jsonObject.get("newsimageurl").getAsString();
-			this.shortMessage = jsonObject.get("shortmessage").getAsString();
-			this.wholeMessage = jsonObject.get("wholemessage").getAsString();
+		public UUID getUUID() {
+			return uuid;
 		}
 
-		public String getHeadLine() {
-			return headLine;
-		}
-
-		public void setHeadLine(String headLine) {
-			this.headLine = headLine;
+		public void setUUID(UUID uuid) {
+			this.uuid = uuid;
 		}
 
 		public String getDate() {
@@ -348,36 +362,20 @@ public class DSBMobile implements Serializable, Cloneable {
 			this.date = date;
 		}
 
-		public String getId() {
-			return id;
+		public String getTitle() {
+			return title;
 		}
 
-		public void setId(String id) {
-			this.id = id;
+		public void setTitle(String title) {
+			this.title = title;
 		}
 
-		public String getImageUrl() {
-			return imageUrl;
+		public String getDetail() {
+			return detail;
 		}
 
-		public void setImageUrl(String imageUrl) {
-			this.imageUrl = imageUrl;
-		}
-
-		public String getShortMessage() {
-			return shortMessage;
-		}
-
-		public void setShortMessage(String shortMessage) {
-			this.shortMessage = shortMessage;
-		}
-
-		public String getWholeMessage() {
-			return wholeMessage;
-		}
-
-		public void setWholeMessage(String wholeMessage) {
-			this.wholeMessage = wholeMessage;
+		public void setDetail(String detail) {
+			this.detail = detail;
 		}
 
 		@Override
@@ -386,30 +384,29 @@ public class DSBMobile implements Serializable, Cloneable {
 			if (obj == null) return false;
 			if (getClass() != obj.getClass()) return false;
 			News other = (News) obj;
+			if (!getEnclosingInstance().equals(other.getEnclosingInstance())) return false;
 			if (date == null) {
 				if (other.date != null) return false;
 			} else if (!date.equals(other.date)) return false;
-			if (headLine == null) {
-				if (other.headLine != null) return false;
-			} else if (!headLine.equals(other.headLine)) return false;
-			if (id == null) {
-				if (other.id != null) return false;
-			} else if (!id.equals(other.id)) return false;
-			if (imageUrl == null) {
-				if (other.imageUrl != null) return false;
-			} else if (!imageUrl.equals(other.imageUrl)) return false;
-			if (shortMessage == null) {
-				if (other.shortMessage != null) return false;
-			} else if (!shortMessage.equals(other.shortMessage)) return false;
-			if (wholeMessage == null) {
-				if (other.wholeMessage != null) return false;
-			} else if (!wholeMessage.equals(other.wholeMessage)) return false;
+			if (detail == null) {
+				if (other.detail != null) return false;
+			} else if (!detail.equals(other.detail)) return false;
+			if (title == null) {
+				if (other.title != null) return false;
+			} else if (!title.equals(other.title)) return false;
+			if (uuid == null) {
+				if (other.uuid != null) return false;
+			} else if (!uuid.equals(other.uuid)) return false;
 			return true;
+		}
+
+		private DSBMobile getEnclosingInstance() {
+			return DSBMobile.this;
 		}
 
 		@Override
 		public String toString() {
-			return "{\"headLine\":\"" + headLine + "\", \"date\":\"" + date + "\", \"id\":\"" + id + "\", \"imageUrl\":\"" + imageUrl + "\", \"shortMessage\":\"" + shortMessage + "\", \"wholeMessage\":\"" + wholeMessage + "\"}";
+			return "{\"uuid\": \"" + uuid + "\", \"date\": \"" + date + "\", \"title\": \"" + title + "\", \"detail\": \"" + detail + "\"}";
 		}
 	}
 }
