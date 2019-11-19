@@ -48,7 +48,7 @@ for (News news : newsList) {
 Gradle:
 ```gradle
 dependencies {
-	implementation 'de.sematre.dsbmobile:DSBmobile-API:1.7'
+	implementation 'de.sematre.dsbmobile:DSBmobile-API:1.8'
 }
 ```
 
@@ -57,11 +57,13 @@ Maven:
 <dependency>
 	<groupId>de.sematre.dsbmobile</groupId>
 	<artifactId>DSBmobile-API</artifactId>
-	<version>1.7</version>
+	<version>1.8</version>
 </dependency>
 ```
 
 ## Release History
+* 1.8
+	* News implementation
 * 1.7
 	* Make UUID random
 * 1.6
