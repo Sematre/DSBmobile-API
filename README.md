@@ -29,8 +29,20 @@ for (TimeTable timeTable : timeTables) {
 ```
 
 ### News
+```java
+DSBMobile dsbMobile = new DSBMobile("username", "password");
 
-Work in progress.
+ArrayList<News> newsList = dsbMobile.getNews();
+for (News news : newsList) {
+
+	UUID uuid = news.getUUID();
+	String date = news.getDate();
+
+	String title = news.getTitle();
+	String detail = news.getDetail();
+
+}
+```
 
 ## Implementation
 Gradle:
